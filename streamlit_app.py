@@ -8,7 +8,7 @@ st.set_page_config(page_title="Tunisian Chatbot", page_icon="🤖", layout="wide
 def query_gemini_pro(prompt):
     """Queries Google Gemini Pro and returns the response."""
     import google.generativeai as palm
-    palm.configure(api_key="YOUR_API_KEY")  # Replace with your actual API key
+    palm.configure(api_key="AIzaSyDvMoNqBLBFeIjT_OeUqirKH5SO6n8FR8E")  # Replace with your actual API key
 
     completion = palm.generate_text(
         model="models/gemini-pro",
