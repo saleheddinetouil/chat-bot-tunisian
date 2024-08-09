@@ -16,11 +16,18 @@ def query_gemini(prompt, model_name="models/gemini-pro"):
     import google.generativeai as palm
     palm.configure(api_key=api_key)
 
-    completion = palm.generate_text(
-        model=model_name,
-        prompt=prompt,
-        temperature=0.7,
-        max_output_tokens=128,
+    # Create the model
+  generation_config = {
+  "temperature": 1,
+  "top_p": 0.95,
+  "top_k": 64,
+  "max_output_tokens": 8192,
+  "response_mime_type": "text/plain",
+}
+
+  completion = genai.GenerativeModel(
+         model_name="gemini-1.5-flash",
+  generation_config=generation_config,
     )
     return completion.result
 
