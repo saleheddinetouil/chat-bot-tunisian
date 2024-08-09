@@ -1,5 +1,6 @@
 import streamlit as st
 import os
+import google.generativeai as genai
 
 # Set page config for a wider layout
 st.set_page_config(page_title="Darija Chatbot", page_icon="🤖", layout="wide")
@@ -7,33 +8,31 @@ st.set_page_config(page_title="Darija Chatbot", page_icon="🤖", layout="wide")
 # Get API key from environment variable
 api_key = os.getenv("API")
 if api_key is None:
-    st.error("Error: GOOGLE_API_KEY environment variable is not set.")
+    st.error("Error: GEMINI_API_KEY environment variable is not set.")
     st.stop()
 
-# Function to query Gemini
-def query_gemini(prompt, model_name="models/gemini-pro"):
-    """Queries Google Gemini with the specified model and returns the response."""
-    import google.generativeai as palm
-    palm.configure(api_key=api_key)
+# Configure Gemini
+genai.configure(api_key=api_key)
 
-    # Create the model
-    generation_config={
+# Create the model
+generation_config = {
     "temperature": 1,
     "top_p": 0.95,
     "top_k": 64,
     "max_output_tokens": 8192,
     "response_mime_type": "text/plain",
-    }
+}
 
-    completion = genai.GenerativeModel(
-        model_name="gemini-1.5-flash",
-        generation_config=generation_config,
-    )
-    return completion.result
+model = genai.GenerativeModel(
+    model_name="gemini-1.5-flash",
+    generation_config=generation_config,
+)
 
-# Initialize chat history (store in session state to persist across reruns)
+# Initialize chat history
 if "chat_history" not in st.session_state:
-    st.session_state.chat_history = []
+    st.session_state.chat_history = [
+        "U    ONLY  SPEAK    DARIJA   :    TUNISIAN ALGERIAN MAROCCAN"
+    ]
 
 # --- Streamlit App UI ---
 st.title("🇩🇿 Darija Chatbot 🤖")
@@ -41,28 +40,23 @@ st.write("Interact with the chatbot in Darija! (Powered by Gemini)")
 
 # Display chat history
 for message in st.session_state.chat_history:
-    with st.chat_message(message["role"]):
-        st.write(message["content"])
+    with st.chat_message("assistant" if message.startswith("output:") else "user"):
+        st.write(message.replace("input:", "").replace("output:", "").strip())
 
 # User input
 user_input = st.chat_input("You:")
 if user_input:
     # Add user message to chat history
-    st.session_state.chat_history.append({"role": "user", "content": user_input})
+    st.session_state.chat_history.append(f"input:{user_input}")
 
     # Generate chatbot response using Gemini
-    prompt = "".join([f"{'Human: ' if msg['role'] == 'user' else 'Chatbot: '}{msg['content']}\n" 
-                     for msg in st.session_state.chat_history])
-
-    try:
-        response = query_gemini(prompt)
-    except Exception as e:
-        st.error(f"Error querying Gemini: {e}")
-        response = "Sorry, I'm having trouble understanding you right now."  # Fallback response
+    prompt = st.session_state.chat_history.copy()
+    prompt.append("output:")
+    response = model.generate_content(prompt)
 
     # Add chatbot response to chat history
-    st.session_state.chat_history.append({"role": "assistant", "content": response.split("Chatbot: ")[-1].strip()})
+    st.session_state.chat_history.append(f"output:{response.text}")
 
     # Display chatbot response
     with st.chat_message("assistant"):
-        st.write(response.split("Chatbot: ")[-1].strip())
+        st.write(response.text)
