@@ -11,7 +11,7 @@ if api_key is None:
     st.stop()
 
 # Function to query Gemini
-def query_gemini(prompt, model_name="models/chat-bison-001"):
+def query_gemini(prompt, model_name="models/gemini-1.5-flash"):
     """Queries Google Gemini with the specified model and returns the response."""
     import google.generativeai as palm
     palm.configure(api_key=api_key)
