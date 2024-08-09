@@ -1,5 +1,2 @@
 streamlit
-transformers
-torch
 google-generativeai
-flask
