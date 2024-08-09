@@ -11,11 +11,10 @@ def query_gemini_pro(prompt):
     palm.configure(api_key="AIzaSyDvMoNqBLBFeIjT_OeUqirKH5SO6n8FR8E")  # Replace with your actual API key
 
     completion = palm.generate_text(
-        model="models/gemini-pro",
+        model="models/text-bison-001",
         prompt=prompt,
         temperature=0.7,
         max_output_tokens=128,
-    api_version="v1" 
     )
     return completion.result
 
