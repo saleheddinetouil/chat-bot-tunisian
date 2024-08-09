@@ -17,17 +17,17 @@ def query_gemini(prompt, model_name="models/gemini-pro"):
     palm.configure(api_key=api_key)
 
     # Create the model
-  generation_config = {
-  "temperature": 1,
-  "top_p": 0.95,
-  "top_k": 64,
-  "max_output_tokens": 8192,
-  "response_mime_type": "text/plain",
-}
+    generation_config={
+    "temperature": 1,
+    "top_p": 0.95,
+    "top_k": 64,
+    "max_output_tokens": 8192,
+    "response_mime_type": "text/plain",
+    }
 
-  completion = genai.GenerativeModel(
-         model_name="gemini-1.5-flash",
-  generation_config=generation_config,
+    completion = genai.GenerativeModel(
+        model_name="gemini-1.5-flash",
+        generation_config=generation_config,
     )
     return completion.result
 
