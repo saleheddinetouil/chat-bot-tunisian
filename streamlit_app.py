@@ -17,7 +17,7 @@ def get_available_models():
     palm.configure(api_key=api_key)
 
     models = palm.list_models()
-    return [model for model in models]  # Extract the last part of the name
+    return [model.name for model in models]  # Extract the last part of the name
 
 
 # Function to query Gemini
