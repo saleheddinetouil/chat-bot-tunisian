@@ -10,14 +10,23 @@ if api_key is None:
     st.error("Error: GOOGLE_API_KEY environment variable is not set.")
     st.stop()
 
+# Function to get available models
+def get_available_models():
+    """Queries Google Gemini for available models and returns a list of their names."""
+    import google.generativeai as palm
+    palm.configure(api_key=api_key)
+
+    models = palm.list_models()
+    return [model.name for model in models]
+
 # Function to query Gemini
-def query_gemini(prompt):
-    """Queries Google Gemini and returns the response."""
+def query_gemini(prompt, model_name):
+    """Queries Google Gemini with the specified model and returns the response."""
     import google.generativeai as palm
     palm.configure(api_key=api_key)
 
     completion = palm.generate_text(
-        model="models/chat-bison-001",  # Use the Gemini model
+        model=model_name,
         prompt=prompt,
         temperature=0.7,
         max_output_tokens=128,
@@ -27,10 +36,17 @@ def query_gemini(prompt):
 # Initialize chat history (store in session state to persist across reruns)
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
+if "selected_model" not in st.session_state:
+    st.session_state.selected_model = None
 
 # --- Streamlit App UI ---
 st.title("🇹🇳  Tunisian Chatbot  🤖")
 st.write("Interact with the chatbot in Tunisian dialect! (Powered by Gemini)")
+
+# Display available models for user to choose
+available_models = get_available_models()
+selected_model = st.selectbox("Choose a model:", available_models, index=available_models.index(st.session_state.selected_model) if st.session_state.selected_model in available_models else 0)
+st.session_state.selected_model = selected_model
 
 # Display chat history
 for message in st.session_state.chat_history:
@@ -48,7 +64,7 @@ if user_input:
                      for msg in st.session_state.chat_history])
 
     try:
-        response = query_gemini(prompt)
+        response = query_gemini(prompt, st.session_state.selected_model)
     except Exception as e:
         st.error(f"Error querying Gemini: {e}")
         response = "Sorry, I'm having trouble understanding you right now."  # Fallback response
