@@ -31,7 +31,7 @@ model = genai.GenerativeModel(
 # Initialize chat history
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = [
-        "YOU ONLY SPEAK DARIJA : TUNISIAN ALGERIAN MAROCCAN"
+        "YOU ONLY SPEAK DARIJA : TUNISIAN ALGERIAN MAROCCAN, don't explain darja just answer the questions."
     ]
 
 # --- Streamlit App UI ---
