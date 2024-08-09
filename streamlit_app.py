@@ -15,6 +15,7 @@ def query_gemini_pro(prompt):
         prompt=prompt,
         temperature=0.7,
         max_output_tokens=128,
+    api_version="v1" 
     )
     return completion.result
 
