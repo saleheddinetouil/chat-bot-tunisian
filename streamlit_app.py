@@ -1,69 +1,37 @@
-import streamlit as st
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from flask import Flask, render_template, request, redirect, url_for
+import google.generativeai as genai
 
-# Set page config for a wider layout
-st.set_page_config(page_title="Tunisian Chatbot", page_icon="🤖", layout="wide")
+model = genai.GenerativeModel('gemini-pro')
 
-# Function to query Gemini Pro
-def query_gemini_pro(prompt):
-    """Queries Google Gemini Pro and returns the response."""
-    import google.generativeai as palm
-    palm.configure(api_key="AIzaSyDvMoNqBLBFeIjT_OeUqirKH5SO6n8FR8E")  # Replace with your actual API key
+import os
+my_api_key_gemini = os.getenv('API')
 
-    completion = palm.generate_text(
-        model="models/text-bison-001",
-        prompt=prompt,
-        temperature=0.7,
-        max_output_tokens=128,
-    )
-    return completion.result
+genai.configure(api_key=my_api_key_gemini)
 
-@st.cache_resource  # Cache the model and tokenizer for faster loading
-def load_model_and_tokenizer():
-    """Loads the pre-trained Arabic GPT-2 model and tokenizer (fallback)."""
-    model_name = "aubmindlab/bert-base-arabertv2"  
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
-    model = AutoModelForCausalLM.from_pretrained(model_name)
-    return model, tokenizer
+app = Flask(__name__)
 
-# Load the fallback model and tokenizer
-model, tokenizer = load_model_and_tokenizer()
+# Define your 404 error handler to redirect to the index page
+@app.errorhandler(404)
+def page_not_found(e):
+    return redirect(url_for('index'))
 
-# Initialize chat history (store in session state to persist across reruns)
-if "chat_history" not in st.session_state:
-    st.session_state.chat_history = []
+@app.route('/', methods=['POST', 'GET'])
+def index():
+    if request.method == 'POST':
+        try:
+            prompt = request.form['prompt']
+            question = prompt
 
-# --- Streamlit App UI ---
-st.title("🇹🇳  Tunisian Chatbot  🤖")
-st.write("Interact with the chatbot in Tunisian dialect! (Powered by Gemini Pro)")
+            response = model.generate_content(question)
 
-# Display chat history
-for message in st.session_state.chat_history:
-    with st.chat_message(message["role"]):
-        st.write(message["content"])
+            if response.text:
+                return response.text
+            else:
+                return "Sorry, but I think Gemini didn't want to answer that!"
+        except Exception as e:
+            return "Sorry, but Gemini didn't want to answer that!"
 
-# User input
-user_input = st.chat_input("You:")
-if user_input:
-    # Add user message to chat history
-    st.session_state.chat_history.append({"role": "user", "content": user_input})
+    return render_template('index.html', **locals())
 
-    # Generate chatbot response using Gemini Pro
-    prompt = "".join([f"{'Human: ' if msg['role'] == 'user' else 'Chatbot: '}{msg['content']}\n" 
-                     for msg in st.session_state.chat_history])
-
-    try:
-        response = query_gemini_pro(prompt)
-    except Exception as e:
-        st.error(f"Error querying Gemini Pro: {e}")
-        # Fallback to the Arabic GPT-2 model
-        inputs = tokenizer(prompt, return_tensors="pt")
-        output = model.generate(**inputs, max_length=128, pad_token_id=tokenizer.eos_token_id)
-        response = tokenizer.decode(output[0], skip_special_tokens=True)
-
-    # Add chatbot response to chat history
-    st.session_state.chat_history.append({"role": "assistant", "content": response.split("Chatbot: ")[-1].strip()})
-
-    # Display chatbot response
-    with st.chat_message("assistant"):
-        st.write(response.split("Chatbot: ")[-1].strip())
+if __name__ == '__main__':
+    app.run(debug=True)
